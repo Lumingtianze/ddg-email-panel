@@ -1,40 +1,35 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { createRouter } from 'next-connect'
-import Boom from '@hapi/boom'
 import { handler as errHandler } from '../../../lib/apiHandler'
+import { ApiError } from '../../../lib/exceptions'
 import { login as ddgLogin, getAccessToken } from '../../../lib/ddgEmailApi'
 
-const router = createRouter<NextApiRequest, NextApiResponse>()
+export const runtime = 'edge';
 
-async function login(req: NextApiRequest, res: NextApiResponse) {
-  const { username, otp } = req.body
-  if (!username || !otp) {
-    throw Boom.badRequest()
+export default async function handler(req: Request) {
+  if (req.method !== 'POST') return errHandler.onNoMatch();
+
+  try {
+    const { username, otp } = await req.json();
+    if (!username || !otp) {
+      throw new ApiError(400, 'Duck Address and OTP are required');
+    }
+
+    const result = await ddgLogin(username, otp);
+    const data = await result.json() as any;
+
+    if (result.ok) {
+      const accessResult = await getAccessToken(data.token);
+      const accessData = await accessResult.json();
+      
+      if (accessResult.ok) {
+        return new Response(JSON.stringify(accessData), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      throw new ApiError(accessResult.status, accessResult.statusText);
+    }
+    throw new ApiError(result.status, result.statusText);
+  } catch (err) {
+    return errHandler.onError(err);
   }
-  await ddgLogin(username, otp)
-    .then(async (result) => {
-      const data = (await result.json()) as {
-        status: string
-        token: string
-        user: string
-      }
-      if (result.ok) {
-        await getAccessToken(data.token).then(async (result) => {
-          const data = await result.json()
-          if (result.ok) {
-            res.status(200).json(data)
-          } else {
-            res.status(result.status).json({ message: result.statusText })
-          }
-        })
-      } else {
-        res.status(result.status).json({ message: result.statusText })
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      throw Boom.badImplementation()
-    })
 }
-
-export default router.post(login).handler(errHandler)

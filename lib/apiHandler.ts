@@ -1,45 +1,40 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { createRouter } from "next-connect";
-import * as Boom from "@hapi/boom";
 
-const router = createRouter<NextApiRequest, NextApiResponse>();
+import { ApiError } from "./exceptions";
 
 const handler = {
-  onError: (
-    err: unknown,
-    req: any,
-    res: {
-      status: (arg0: number) => void;
-      json: (arg0: {
-        statusCode?: number;
-        error?: string;
-        message: string;
-      }) => void;
-    }
-  ) => {
-    if (Boom.isBoom(err)) {
+  onError: (err: unknown) => {
+    // 处理已知的自定义 API 错误
+    if (err instanceof ApiError) {
       const result = {
-        statusCode: err.output.payload.statusCode,
-        error: err.output.payload.error,
-        message: err.output.payload.message,
-        code: -1,
+        statusCode: err.statusCode,
+        message: err.message,
+        code: err.data?.code || -1,
       };
-      // add error code
-      if (err.data?.code) result.code = err.data?.code;
-      res.status(err.output.payload.statusCode);
-      res.json(result);
-    } else {
-      res.status(500);
-      res.json({
-        message: "Unexpected error",
+      return new Response(JSON.stringify(result), {
+        status: err.statusCode,
+        headers: { "Content-Type": "application/json" },
       });
-      console.error(err);
     }
+
+    // 处理未捕获的意外错误
+    console.error(err);
+    return new Response(
+      JSON.stringify({ 
+        message: "Unexpected error", 
+        statusCode: 500 
+      }),
+      { 
+        status: 500, 
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
   },
-  onNoMatch: (req: any, res: any) => {
-    res.status(405).json(Boom.methodNotAllowed().output.payload);
+  onNoMatch: () => {
+    return new Response(JSON.stringify({ message: "Method Not Allowed" }), {
+      status: 405,
+      headers: { "Content-Type": "application/json" },
+    });
   },
 };
 
-export default router;
 export { handler };

@@ -1,32 +1,30 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { createRouter } from 'next-connect'
-import Boom from '@hapi/boom'
 import { handler as errHandler } from '../../lib/apiHandler'
+import { ApiError } from '../../lib/exceptions'
 import { generateAddresses } from '../../lib/ddgEmailApi'
 
-const router = createRouter<NextApiRequest, NextApiResponse>()
+export const runtime = 'edge';
 
-async function generate(req: NextApiRequest, res: NextApiResponse) {
-  const { authorization } = req.headers
-  if (!authorization || !authorization.includes('Bearer ')) {
-    throw Boom.unauthorized()
+export default async function handler(req: Request) {
+  if (req.method !== 'POST') return errHandler.onNoMatch();
+
+  try {
+    const authorization = req.headers.get('authorization');
+    if (!authorization || !authorization.includes('Bearer ')) {
+      throw new ApiError(401, 'Unauthorized');
+    }
+    
+    const token = authorization.replace('Bearer ', '');
+    const result = await generateAddresses(token);
+    const data = await result.json();
+
+    if (result.ok) {
+      return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw new ApiError(result.status, result.statusText);
+  } catch (err) {
+    return errHandler.onError(err);
   }
-  const token = authorization.replace('Bearer ', '')
-  await generateAddresses(token)
-    .then(async (result) => {
-      const data = (await result.json()) as {
-        address: string
-      }
-      if (result.ok) {
-        res.status(200).json(data)
-      } else {
-        res.status(result.status).json({ message: result.statusText })
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      throw Boom.badImplementation()
-    })
 }
-
-export default router.post(generate).handler(errHandler)

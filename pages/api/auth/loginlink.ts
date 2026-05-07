@@ -1,25 +1,24 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { createRouter } from 'next-connect'
-import Boom from '@hapi/boom'
 import { handler as errHandler } from '../../../lib/apiHandler'
+import { ApiError } from '../../../lib/exceptions'
 import { loginRequest } from '../../../lib/ddgEmailApi'
 
-const router = createRouter<NextApiRequest, NextApiResponse>()
+export const runtime = 'edge';
 
-async function loginLink(req: NextApiRequest, res: NextApiResponse) {
-  const { username } = req.body
-  await loginRequest(username)
-    .then((result) => {
-      if (result.ok) {
-        res.status(200).json({ message: 'success' })
-      } else {
-        res.status(result.status).json({ message: result.statusText })
-      }
-    })
-    .catch((err) => {
-      console.error(err)
-      throw Boom.badImplementation()
-    })
+export default async function handler(req: Request) {
+  if (req.method !== 'POST') return errHandler.onNoMatch();
+
+  try {
+    const { username } = await req.json();
+    const result = await loginRequest(username);
+    
+    if (result.ok) {
+      return new Response(JSON.stringify({ message: 'success' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    throw new ApiError(result.status, result.statusText);
+  } catch (err) {
+    return errHandler.onError(err);
+  }
 }
-
-export default router.post(loginLink).handler(errHandler)

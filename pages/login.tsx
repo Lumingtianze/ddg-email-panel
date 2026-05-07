@@ -14,6 +14,7 @@ import generateAddresses from '../utils/generateAddresses'
 import * as store from '../utils/store'
 import maskEmail from '../utils/maskEmail'
 
+
 const usernameAtom = atom<string>('')
 const otpAtom = atom<string>('')
 const loadingAtom = atom<boolean>(false)

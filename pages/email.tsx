@@ -12,6 +12,7 @@ import Layout from '../components/Layout/Layout'
 import * as store from '../utils/store'
 import generateAddresses from '../utils/generateAddresses'
 
+
 const userIdAtom = atom<number | null>(null)
 const userInfoAtom = atom<UserInfo | null>(null)
 const loadingAtom = atom<boolean>(true)

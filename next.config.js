@@ -10,13 +10,33 @@ const getGitCommitInfo = require('./utils/getGitCommitInfo')
 module.exports = async () => {
   const nextConfig = getGitCommitInfo(
     withPWA({
-      experimental: {
-        newNextLinkBehavior: true,
-      },
       i18n,
       reactStrictMode: true,
       swcMinify: true,
       output: 'standalone',
+      
+      // 统一处理首页重定向
+      async redirects() {
+        return [
+          {
+            source: '/',
+            destination: '/email',
+            permanent: false,
+          },
+        ]
+      },
+
+      // Webpack 补丁：在 Edge 环境构建时忽略 Node.js 原生模块
+      webpack: (config, { isServer }) => {
+        if (isServer) {
+          config.resolve.fallback = {
+            ...config.resolve.fallback,
+            fs: false,
+            path: false,
+          };
+        }
+        return config;
+      },
     })
   )
   return nextConfig
