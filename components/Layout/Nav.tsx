@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from 'react'
+import React, { Fragment, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Menu } from '@headlessui/react'
@@ -25,14 +25,14 @@ const isOpenAtom = atom<boolean>(false)
 const uidAtom = atom<number>(0)
 
 type NavItem = {
-  icon: JSX.Element
+  icon: React.ReactNode
   title: string
   href?: string
   router?: string
 }
 
 type BottomNavItem = {
-  icon: JSX.Element
+  icon: React.ReactNode
   title: string
   href?: string
   locale?: string
@@ -104,7 +104,7 @@ const languageSwitchItems: BottomNavItem[] = [
     title: 'English',
     locale: 'en',
     handle: () => {
-      setCookie('NEXT_LOCALE', 'en')
+      setCookie('NEXT_LOCALE', 'en', { maxAge: 60 * 60 * 24 * 365 });
     },
   },
   {
@@ -112,7 +112,7 @@ const languageSwitchItems: BottomNavItem[] = [
     title: '简体中文',
     locale: 'zh-CN',
     handle: () => {
-      setCookie('NEXT_LOCALE', 'zh-CN')
+      setCookie('NEXT_LOCALE', 'zh-CN', { maxAge: 60 * 60 * 24 * 365 });
     },
   },
   {
@@ -120,7 +120,7 @@ const languageSwitchItems: BottomNavItem[] = [
     title: '日本語',
     locale: 'ja-JP',
     handle: () => {
-      setCookie('NEXT_LOCALE', 'ja-JP')
+      setCookie('NEXT_LOCALE', 'ja-JP', { maxAge: 60 * 60 * 24 * 365 });
     },
   },
 ]
@@ -131,7 +131,7 @@ const NavLink = ({
   href = '#',
   router,
 }: {
-  icon: JSX.Element
+  icon: React.ReactNode
   title: string
   href?: string
   router?: string
@@ -178,7 +178,7 @@ function BottomMenu({
   children,
 }: {
   title: string
-  icon: JSX.Element
+  icon: React.ReactNode
   children: React.ReactNode
 }) {
   return (

@@ -12,19 +12,7 @@ module.exports = async () => {
     withPWA({
       i18n,
       reactStrictMode: true,
-      swcMinify: true,
       output: 'standalone',
-      
-      // 统一处理首页重定向
-      async redirects() {
-        return [
-          {
-            source: '/',
-            destination: '/email',
-            permanent: false,
-          },
-        ]
-      },
 
       // Webpack 补丁：在 Edge 环境构建时忽略 Node.js 原生模块
       webpack: (config, { isServer }) => {

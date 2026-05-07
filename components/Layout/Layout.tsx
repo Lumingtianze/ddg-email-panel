@@ -1,3 +1,4 @@
+import React from 'react'
 import Head from 'next/head'
 import { Toaster } from 'react-hot-toast'
 import { useTranslation } from 'next-i18next'
