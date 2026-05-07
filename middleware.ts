@@ -1,38 +1,30 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// 处理语言检测与持久化重定向
+// [ 修复 ] 严格限制中间件逻辑，确保只有访问 "/" 时才会重定向
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // 只处理根路径的自动重定向
+  // 仅处理根路径 "/"
   if (pathname === '/') {
-    // 1. 尝试从 Cookie 获取用户之前选过的语言
+    // 优先从 Cookie 读取，其次从 Header 读取
     let locale = request.cookies.get('NEXT_LOCALE')?.value
-
-    // 2. 如果没 Cookie，解析 Accept-Language 头部
     if (!locale) {
       const acceptLanguage = request.headers.get('accept-language')
-      if (acceptLanguage) {
-        if (acceptLanguage.startsWith('zh')) {
-          locale = 'zh-CN'
-        } else if (acceptLanguage.startsWith('ja')) {
-          locale = 'ja-JP'
-        }
-      }
+      if (acceptLanguage?.startsWith('zh')) locale = 'zh-CN'
+      else if (acceptLanguage?.startsWith('ja')) locale = 'ja-JP'
     }
-
-    // 3. 最终回退到默认语言
     locale = locale || 'en'
 
-    // 执行重定向到 /[locale]/email
+    // [ 修复 ] 执行重定向到当前语言的 email 页面
     return NextResponse.redirect(new URL(`/${locale}/email`, request.url))
   }
 
+  // 其他所有路径（如 /account, /email）直接放行，不再干涉
   return NextResponse.next()
 }
 
-// 仅在根路径执行此逻辑，避免性能损耗
 export const config = {
+  // [ 关键 ] matcher 必须精准，防止干扰其他静态资源和页面
   matcher: ['/'],
 }

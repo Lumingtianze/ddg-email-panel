@@ -43,27 +43,27 @@ const notLoginNavItem: NavItem[] = [
   {
     title: 'Github',
     icon: <FiGithub className="w-5" />,
-    href: 'https://github.com/whatk233/ddg-email-panel',
+    href: 'https://github.com/Lumingtianze/ddg-email-panel',
   },
 ]
 
 const navItem: NavItem[] = [
   {
     title: 'nav.address',
-    icon: <AtSymbolIcon />,
+    icon: <AtSymbolIcon className="w-5 h-5" />, 
     href: '#',
     router: '/email',
   },
   {
     title: 'nav.account',
-    icon: <UserIcon />,
+    icon: <UserIcon className="w-5 h-5" />, 
     href: '#',
     router: '/account',
   },
   {
     title: 'Github',
-    icon: <FiGithub className="w-5" />,
-    href: 'https://github.com/whatk233/ddg-email-panel',
+    icon: <FiGithub className="w-5 h-5" />,
+    href: 'https://github.com/Lumingtianze/ddg-email-panel',
   },
 ]
 
@@ -125,51 +125,27 @@ const languageSwitchItems: BottomNavItem[] = [
   },
 ]
 
-const NavLink = ({
-  icon,
-  title = 'Link',
-  href = '#',
-  router,
-}: {
-  icon: React.ReactNode
-  title: string
-  href?: string
-  router?: string
-}) => {
-  const [uid] = useAtom(uidAtom)
-  const { t } = useTranslation('')
+const NavLink = ({ icon, title = 'Link', href = '#', router }: NavItem) => {
   const uRouter = useRouter()
-  const classNames = `flex items-center p-2 rounded-md group hover:bg-slate-200 dark:hover:bg-slate-700`
-  if (router) {
-    return (
-      <button
-        type="button"
-        className={classNames}
-        onClick={() => {
-          if (router) {
-            uRouter.push(`${router}`, {
-              query: { id: uid },
-            })
-          }
-        }}
-      >
-        <span className="w-5">{icon}</span>
-        <span className="pl-3">{t(title)}</span>
-      </button>
-    )
-  } else {
-    return (
-      <Link
-        className={classNames}
-        href={href}
-        target={href.includes('https://') ? '_blank' : ''}
-        rel="noopener noreferrer"
-      >
-        <span className="w-5">{icon}</span>
-        <span className="pl-3">{t(title)}</span>
-      </Link>
-    )
-  }
+  const currentId = uRouter.query.id || '0'
+  const { t } = useTranslation('')
+  const isActive = uRouter.pathname === router
+
+  return (
+    <Link 
+      href={router ? { pathname: router, query: { id: currentId } } : href}
+      className={`flex items-center px-3 py-2.5 my-1 rounded-xl transition-all duration-200 group ${
+        isActive 
+          ? 'bg-sky-500/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400 font-semibold shadow-sm' 
+          : 'text-slate-600 hover:bg-slate-200/50 dark:text-slate-400 dark:hover:bg-slate-700/50'
+      }`}
+    >
+      <span className={`shrink-0 transition-colors ${isActive ? 'text-sky-500' : 'text-slate-400 group-hover:text-slate-600'}`}>
+        {icon}
+      </span>
+      <span className="pl-3 text-[13px] tracking-wide truncate">{t(title)}</span>
+    </Link>
+  )
 }
 
 function BottomMenu({

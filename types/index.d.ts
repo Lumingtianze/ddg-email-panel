@@ -1,7 +1,9 @@
+
 export interface UserInfo {
-  access_token?: string
-  cohort?: string
-  remark?: string
-  username?: string
-  nextAlias?: string
+  username: string;
+  access_token: string;
+  cohort: string;
+  email?: string;
+  remark: string;
+  nextAlias: string;
 }
